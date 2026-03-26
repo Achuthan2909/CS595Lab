@@ -241,7 +241,7 @@ To generate the TOML files needed for your Noir circuits, you can run the provid
 ### How to Use:
 
 1. **Run the Demo Script:**  
-   Execute the demo using Node.js (located in hw5/gen_toml/src/):
+   Execute the demo using Node.js (located in hw6/gen_toml/src/):
    ```bash
    npx ts-node demo.ts
    ```
