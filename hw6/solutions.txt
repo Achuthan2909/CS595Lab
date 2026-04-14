@@ -1,0 +1,50 @@
+Problem 1. (15 points)
+If the Merkle path is made public in the withdrawal proof, then the proof reveals the exact leaf/index
+in the Merkle tree that is being spent. Because all deposit commitments are public on-chain, anyone
+can map that leaf/index to the specific commitment from a particular deposit transaction. This links a
+withdrawal to a specific deposit and defeats the anonymity goal of the mixer.
+
+Problem 2. (15 points)
+If the withdrawal proof only checks that PedersenHash(id, r) = c (or equivalently computes c from id,r)
+but does not prove that c is contained in the on-chain Merkle tree (i.e., in the set of deposits), then a
+user can choose any fresh (id, r), compute c, produce a valid proof of the hash relation, and withdraw
+without ever having made a corresponding deposit. This breaks soundness and allows unbacked withdrawals.
+
+Bonus 1: Deploying contract on-chain (Sepolia) (4 points)
+Deployed Whirlwind address (Sepolia):
+0x818de8fF81F1F886085e35f0AbDA3e631491C745
+
+Transaction hashes (Sepolia):
+- Deposit:  0xac1703a7342aff71fc55cafec659bf37205a68b7f5ed193f699aea6909bf97cf
+- Withdraw: 0x6e2bf7064e307f64e3c1a1b541a64c8670acb1aec3017e0c720a758149b6513a
+
+Modified deployment script (proof vs public inputs)
+In this lab setup, Barretenberg outputs two files:
+- target/proof          (binary proof bytes to send on-chain as `bytes`)
+- target/public_inputs  (binary 32-byte public inputs; useful for debugging)
+
+Whirlwind assembles public inputs itself, so the frontend submits `target/proof` (not `public_inputs`).
+
+Script (prints proof length + optional public inputs):
+
+python3 - <<'PY'
+import binascii
+from pathlib import Path
+
+proof_path = Path("HW6/CS595Lab/hw6/contracts/deposit_circuit/target/proof")
+pub_path = Path("HW6/CS595Lab/hw6/contracts/deposit_circuit/target/public_inputs")
+
+proof = proof_path.read_bytes()
+print("proof_bytes_len =", len(proof))
+print("proof_hex_prefix =", "0x" + binascii.hexlify(proof[:64]).decode(), "...")  # preview
+
+if pub_path.exists():
+    pub = pub_path.read_bytes()
+    print("public_inputs_bytes_len =", len(pub), "(fields =", len(pub)//32, ")")
+    for i in range(0, len(pub), 32):
+        print(f"  [{i//32}] 0x{binascii.hexlify(pub[i:i+32]).decode()}")
+PY
+
+Bonus 2: Frontend implementation (4 points)
+- Source code: HW6/CS595Lab/hw6/frontend/
+- Screenshot: HW6/CS595Lab/hw6/frontend/Working_website.png

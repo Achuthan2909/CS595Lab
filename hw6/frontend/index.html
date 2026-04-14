@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whirlwind Mixer Frontend (HW6)</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0b1020;
+        --panel: #121a33;
+        --text: #e8ecff;
+        --muted: #aeb7e6;
+        --accent: #6ea8ff;
+        --danger: #ff6e6e;
+        --ok: #63e6be;
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1200px 800px at 30% 0%, #17214a 0%, var(--bg) 60%);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 16px 40px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        letter-spacing: 0.2px;
+      }
+      .sub {
+        margin: 0 0 22px;
+        color: var(--muted);
+        line-height: 1.35;
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      @media (min-width: 980px) {
+        .grid {
+          grid-template-columns: 1.15fr 0.85fr;
+        }
+      }
+      .card {
+        background: color-mix(in srgb, var(--panel) 92%, black 8%);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 700px) {
+        .row.two {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+        font-size: 13px;
+      }
+      textarea {
+        min-height: 104px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+      .btns {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      button {
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(110, 168, 255, 0.16);
+        color: var(--text);
+        padding: 9px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      button.primary {
+        background: rgba(110, 168, 255, 0.28);
+        border-color: rgba(110, 168, 255, 0.45);
+      }
+      button.danger {
+        background: rgba(255, 110, 110, 0.18);
+        border-color: rgba(255, 110, 110, 0.4);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.35;
+        white-space: pre-wrap;
+      }
+      .status .ok {
+        color: var(--ok);
+      }
+      .status .err {
+        color: var(--danger);
+      }
+      .log {
+        margin-top: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        max-height: 330px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      a {
+        color: var(--accent);
+      }
+      .hint {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .hr {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.12);
+        margin: 14px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Whirlwind Mixer Frontend (HW6 bonus)</h1>
+      <p class="sub">
+        Minimal UI to interact with your deployed <code>Whirlwind</code> contract. It listens to the
+        <code>Deposit</code> event to stay in sync with the on-chain Merkle root. For proofs, paste the
+        <strong>hex proof bytes</strong> (0x...) and the expected public inputs are assembled by the contract.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row two">
+            <div>
+              <label>Network</label>
+              <select id="network">
+                <option value="sepolia">Sepolia</option>
+                <option value="any">Any (no chain check)</option>
+              </select>
+            </div>
+            <div>
+              <label>Whirlwind contract address</label>
+              <input id="whirlwindAddr" placeholder="0x..." />
+            </div>
+          </div>
+
+          <div class="btns">
+            <button id="connect" class="primary">Connect MetaMask</button>
+            <span class="pill" id="acctPill">Not connected</span>
+            <button id="refreshState">Refresh state</button>
+          </div>
+
+          <div class="status" id="state"></div>
+
+          <div class="hr"></div>
+
+          <h3 style="margin: 0 0 10px; font-size: 14px">Deposit (0.1 ETH)</h3>
+          <div class="row two">
+            <div>
+              <label>Deposit proof (hex bytes)</label>
+              <input id="depositProofFile" type="file" />
+              <div class="hint">
+                Tip: select <code>HW6/CS595Lab/hw6/contracts/deposit_circuit/target/proof</code>. The UI will auto-extract
+                the proof bytes in the format the on-chain verifier expects.
+              </div>
+              <textarea id="depositProof" placeholder="0x... (bytes from bb prove / nargo prove flow)"></textarea>
+            </div>
+            <div class="row">
+              <div>
+                <label>New root (bytes32)</label>
+                <input id="depositNewRoot" placeholder="0x..." />
+              </div>
+              <div>
+                <label>Commitment (bytes32)</label>
+                <input id="depositCommitment" placeholder="0x..." />
+              </div>
+              <div class="hint">
+                Your contract constructs public inputs as:
+                <code>[currentRoot, newRoot, commitment, depositIndex]</code>.
+              </div>
+            </div>
+          </div>
+          <div class="btns">
+            <button id="doDeposit" class="primary">Submit deposit</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3 style="margin: 0 0 10px; font-size: 14px">Withdraw (0.1 ETH)</h3>
+          <div class="row two">
+            <div>
+              <label>Withdraw proof (hex bytes)</label>
+              <input id="withdrawProofFile" type="file" />
+              <div class="hint">
+                Tip: select <code>HW6/CS595Lab/hw6/contracts/withdraw_circuit/target/proof</code>.
+              </div>
+              <textarea id="withdrawProof" placeholder="0x..."></textarea>
+            </div>
+            <div class="row">
+              <div>
+                <label>Nullifier (bytes32)</label>
+                <input id="withdrawNullifier" placeholder="0x... (this contract uses id as nullifier)" />
+              </div>
+              <div class="hint">
+                Your contract constructs public inputs as:
+                <code>[currentRoot, nullifier]</code>.
+              </div>
+            </div>
+          </div>
+          <div class="btns">
+            <button id="doWithdraw" class="primary">Submit withdraw</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin: 0 0 8px; font-size: 14px">Event log</h3>
+          <div class="hint">
+            This listens to <code>Deposit(newRoot, commitment, index)</code> and updates the displayed
+            root.
+          </div>
+          <div class="log" id="log"></div>
+          <div class="btns">
+            <button id="clearLog" class="danger">Clear log</button>
+          </div>
+          <div class="hint" style="margin-top: 12px">
+            Run locally by opening this file in a browser. For best results use a simple local server:
+            <code>python3 -m http.server</code> from the <code>frontend/</code> folder.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm";
+
+      const el = (id) => document.getElementById(id);
+      const logEl = el("log");
+      const stateEl = el("state");
+      const acctPill = el("acctPill");
+
+      const WhirlwindAbi = [
+        "function deposit(bytes proof, bytes32 newRoot, bytes32 commitment) payable",
+        "function withdraw(bytes proof, bytes32 nullifier)",
+        "function currentRoot() view returns (bytes32)",
+        "function depositIndex() view returns (uint256)",
+        "function depositVerifier() view returns (address)",
+        "function withdrawVerifier() view returns (address)",
+        "event Deposit(bytes32 newRoot, bytes32 commitment, uint256 index)",
+        "event Withdraw(address indexed recipient, bytes32 nullifier)",
+      ];
+
+      let provider = null;
+      let signer = null;
+      let contract = null;
+      let depositListener = null;
+      let depositProofBytes = null;
+      let withdrawProofBytes = null;
+
+      function bytesToHex(bytes) {
+        return (
+          "0x" +
+          Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
+        );
+      }
+
+      function firstNonZeroIndex(bytes) {
+        for (let i = 0; i < bytes.length; i++) {
+          if (bytes[i] !== 0) return i;
+        }
+        return null;
+      }
+
+      async function loadProofFromFileInput(fileInputId, targetTextareaId) {
+        const fileInput = el(fileInputId);
+        if (!fileInput?.files?.length) return;
+        const file = fileInput.files[0];
+        const buf = await file.arrayBuffer();
+        const proofBytes = new Uint8Array(buf);
+
+        if (fileInputId === "depositProofFile") depositProofBytes = proofBytes;
+        if (fileInputId === "withdrawProofFile") withdrawProofBytes = proofBytes;
+
+        const hexPreview = bytesToHex(proofBytes.slice(0, 64));
+        el(targetTextareaId).value =
+          `${hexPreview}… (loaded ${proofBytes.length} bytes from file; sending raw bytes)` +
+          `\n\nTip: keep using the file picker; do not paste full proofs manually.`;
+
+        appendLog(
+          `Loaded ${file.name}: ${proofBytes.length} bytes (sending full file, no stripping)`,
+        );
+      }
+
+      function appendLog(line) {
+        logEl.textContent = `${line}\n${logEl.textContent}`;
+      }
+
+      function setState(text, kind = "ok") {
+        const cls = kind === "err" ? "err" : "ok";
+        stateEl.innerHTML = `<span class="${cls}">${text}</span>`;
+      }
+
+      function parseAddr(value) {
+        const v = (value || "").trim();
+        if (!v) throw new Error("Missing contract address");
+        return ethers.getAddress(v);
+      }
+
+      async function ensureConnected() {
+        if (!window.ethereum) throw new Error("MetaMask not detected (window.ethereum missing)");
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+
+        const net = await provider.getNetwork();
+        const wanted = el("network").value;
+        if (wanted === "sepolia" && Number(net.chainId) !== 11155111) {
+          throw new Error(`Wrong network. Expected Sepolia (11155111), got ${net.chainId}`);
+        }
+
+        const addr = parseAddr(el("whirlwindAddr").value);
+        contract = new ethers.Contract(addr, WhirlwindAbi, signer);
+        const acct = await signer.getAddress();
+        acctPill.textContent = `${acct.slice(0, 6)}…${acct.slice(-4)} (chainId ${net.chainId})`;
+        appendLog(`Connected: ${acct} on chainId ${net.chainId}`);
+
+        if (depositListener) {
+          contract.off("Deposit", depositListener);
+          depositListener = null;
+        }
+
+        depositListener = (newRoot, commitment, index, ev) => {
+          appendLog(
+            `Deposit event: index=${index.toString()} newRoot=${newRoot} commitment=${commitment} tx=${ev.log.transactionHash}`,
+          );
+          refreshState().catch((e) => appendLog(`refreshState error: ${e.message}`));
+        };
+        contract.on("Deposit", depositListener);
+      }
+
+      async function refreshState() {
+        if (!contract) throw new Error("Connect first");
+        const [root, idx, depV, wV] = await Promise.all([
+          contract.currentRoot(),
+          contract.depositIndex(),
+          contract.depositVerifier(),
+          contract.withdrawVerifier(),
+        ]);
+        setState(
+          `currentRoot: ${root}\ndepositIndex: ${idx.toString()}\ndepositVerifier: ${depV}\nwithdrawVerifier: ${wV}`,
+          "ok",
+        );
+      }
+
+      async function doDeposit() {
+        if (!contract) throw new Error("Connect first");
+        const proof = depositProofBytes ?? el("depositProof").value.trim();
+        const newRoot = el("depositNewRoot").value.trim();
+        const commitment = el("depositCommitment").value.trim();
+        if (!proof || !newRoot || !commitment) throw new Error("Provide proof, newRoot, and commitment");
+
+        const proofHex = proof instanceof Uint8Array
+          ? "0x" + Array.from(proof, b => b.toString(16).padStart(2, "0")).join("")
+          : proof;
+        appendLog(`Proof length: ${(proofHex.length - 2) / 2} bytes`);
+
+        appendLog("Running staticCall to test deposit (no gas spent)...");
+        try {
+          await contract.deposit.staticCall(proofHex, newRoot, commitment, { value: ethers.parseEther("0.1") });
+          appendLog("staticCall succeeded — proof is valid on-chain!");
+        } catch (staticErr) {
+          appendLog(`staticCall failed: ${staticErr.message}`);
+          const errData = staticErr.data ?? staticErr?.error?.data ?? "null";
+          appendLog(`Revert data: ${errData}`);
+          throw new Error(`Deposit would revert on-chain. See log above. data=${errData}`);
+        }
+
+        appendLog("Sending deposit tx with gasLimit=15000000 (0.1 ETH)...");
+        const tx = await contract.deposit(proofHex, newRoot, commitment, {
+          value: ethers.parseEther("0.1"),
+          gasLimit: 15_000_000,
+        });
+        appendLog(`Deposit tx sent: ${tx.hash}`);
+        const receipt = await tx.wait();
+        appendLog(`Deposit confirmed in block ${receipt.blockNumber}`);
+      }
+
+      async function doWithdraw() {
+        if (!contract) throw new Error("Connect first");
+        const proof = withdrawProofBytes ?? el("withdrawProof").value.trim();
+        const nullifier = el("withdrawNullifier").value.trim();
+        if (!proof || !nullifier) throw new Error("Provide proof and nullifier");
+
+        appendLog("Submitting withdraw tx...");
+        const tx = await contract.withdraw(proof, nullifier);
+        appendLog(`Withdraw tx sent: ${tx.hash}`);
+        const receipt = await tx.wait();
+        appendLog(`Withdraw confirmed in block ${receipt.blockNumber}`);
+      }
+
+      el("connect").addEventListener("click", async () => {
+        try {
+          await ensureConnected();
+          await refreshState();
+          setState("Connected and listening for Deposit events.", "ok");
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("refreshState").addEventListener("click", async () => {
+        try {
+          await refreshState();
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("doDeposit").addEventListener("click", async () => {
+        try {
+          await doDeposit();
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("doWithdraw").addEventListener("click", async () => {
+        try {
+          await doWithdraw();
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("depositProofFile").addEventListener("change", async () => {
+        try {
+          await loadProofFromFileInput("depositProofFile", "depositProof");
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("withdrawProofFile").addEventListener("change", async () => {
+        try {
+          await loadProofFromFileInput("withdrawProofFile", "withdrawProof");
+        } catch (e) {
+          setState(e.message, "err");
+          appendLog(`Error: ${e.message}`);
+        }
+      });
+
+      el("clearLog").addEventListener("click", () => {
+        logEl.textContent = "";
+      });
+
+      // Optional: auto-refresh UI if user changes accounts/networks.
+      if (window.ethereum?.on) {
+        window.ethereum.on("accountsChanged", () => {
+          acctPill.textContent = "Not connected";
+          setState("Account changed. Click Connect again.", "err");
+        });
+        window.ethereum.on("chainChanged", () => {
+          acctPill.textContent = "Not connected";
+          setState("Chain changed. Click Connect again.", "err");
+        });
+      }
+    </script>
+  </body>
+</html>
+
